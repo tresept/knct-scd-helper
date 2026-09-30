@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knct-scd-helper.local/schedule.schema.json",
+  "title": "香川高専 時間割",
+  "description": "1学年・1クラスの月曜日から日曜日までの時間割",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "grade", "class", "department", "days"],
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "1.0.0" },
+    "grade": {
+      "type": "integer",
+      "enum": [1, 2, 3, 4, 5],
+      "title": "学年",
+      "x-ui": { "widget": "select", "order": 1 }
+    },
+    "class": {
+      "type": "string",
+      "title": "クラス",
+      "x-ui": { "widget": "select", "order": 2 }
+    },
+    "department": {
+      "type": "string",
+      "enum": ["CN", "ES", "IT"],
+      "title": "学科",
+      "x-ui": { "widget": "select", "order": 3 }
+    },
+    "days": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+      "properties": {
+        "monday": { "$ref": "#/$defs/day", "title": "月曜日", "x-ui": { "order": 1 } },
+        "tuesday": { "$ref": "#/$defs/day", "title": "火曜日", "x-ui": { "order": 2 } },
+        "wednesday": { "$ref": "#/$defs/day", "title": "水曜日", "x-ui": { "order": 3 } },
+        "thursday": { "$ref": "#/$defs/day", "title": "木曜日", "x-ui": { "order": 4 } },
+        "friday": { "$ref": "#/$defs/day", "title": "金曜日", "x-ui": { "order": 5 } },
+        "saturday": { "$ref": "#/$defs/day", "title": "土曜日", "x-ui": { "order": 6 } },
+        "sunday": { "$ref": "#/$defs/day", "title": "日曜日", "x-ui": { "order": 7 } }
+      },
+      "x-ui": { "widget": "weekday-wizard" }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "grade": { "const": 1 } }, "required": ["grade"] },
+      "then": { "properties": { "class": { "enum": ["1", "2", "3"] } } },
+      "else": {
+        "properties": { "class": { "enum": ["CN", "ES", "IT"] } },
+        "allOf": [
+          { "if": { "properties": { "class": { "const": "CN" } }, "required": ["class"] }, "then": { "properties": { "department": { "const": "CN" } } } },
+          { "if": { "properties": { "class": { "const": "ES" } }, "required": ["class"] }, "then": { "properties": { "department": { "const": "ES" } } } },
+          { "if": { "properties": { "class": { "const": "IT" } }, "required": ["class"] }, "then": { "properties": { "department": { "const": "IT" } } } }
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "day": {
+      "type": "array",
+      "maxItems": 8,
+      "description": "配列の長さが時限数。授業がない日は空配列。",
+      "items": { "$ref": "#/$defs/lesson" },
+      "x-ui": { "widget": "period-list", "minimum": 0, "maximum": 8 }
+    },
+    "lesson": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["period", "subject", "teacher", "room"],
+      "properties": {
+        "period": { "type": "integer", "minimum": 1, "maximum": 8, "title": "時限" },
+        "subject": { "type": "string", "minLength": 1, "title": "科目", "x-ui": { "widget": "combobox", "catalog": "subjects", "freeInput": true, "order": 1 } },
+        "teacher": { "type": "string", "minLength": 1, "title": "教員", "x-ui": { "widget": "combobox", "catalog": "teachers", "order": 2 } },
+        "room": { "type": "string", "minLength": 1, "title": "教室", "x-ui": { "widget": "combobox", "catalog": "rooms", "order": 3 } }
+      },
+      "x-ui": { "widget": "lesson-card" }
+    }
+  }
+}
